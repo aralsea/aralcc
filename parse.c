@@ -2,6 +2,7 @@
 
 //パーサ
 Node *code[100];
+LVar *locals;  //ローカル変数を表す連結リスト
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
     Node *node = calloc(1, sizeof(Node));
@@ -130,9 +131,36 @@ Node *primary() {
     if (tok != NULL) {
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
-        node->offset = (tok->str[0] - 'a' + 1) * 8;
+
+        LVar *lvar = find_lvar(tok);
+        if (lvar != NULL) {
+            node->offset = lvar->offset;
+        } else {
+            // localsの先頭に新しい変数名を記録
+            lvar = calloc(1, sizeof(LVar));
+            lvar->next = locals;
+            lvar->name = tok->str;
+            lvar->len = tok->len;
+            lvar->offset = locals->offset + 8;
+            node->offset = lvar->offset;
+            locals = lvar;
+        }
         return node;
     }
     return new_node_num(expect_number());
+}
+
+LVar *find_lvar(Token *tok) {
+    // tokが表す変数名が既に現れているかどうか確認
+    //現れていればそこへのポインタを返す
+    //そうでないならNULL
+
+    for (LVar *var = locals; var != NULL; var = var->next) {
+        if (tok->len == var->len &&
+            strncmp(tok->str, var->name, tok->len) == 0) {
+            return var;
+        }
+    }
+    return NULL;
 }
 //パーサ終わり

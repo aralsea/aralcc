@@ -22,7 +22,8 @@ void codegen(Node *node) {
             gen_lval(
                 node);  //この時点で今見てるnodeを左辺値として解釈した時のアドレスがスタックトップにいる
             printf("    pop rax\n");  //そのアドレスをraxにpop
-            printf("    mov rax, [rax]\n");  // raxにそのアドレスにいる値を代入
+            printf(
+                "    mov rax, [rax]\n");  // raxにそのアドレスにいる値を代入，未定義変数なら何が入ってるかわからない
             printf("    push rax\n");
             return;
         case ND_ASSIGN:

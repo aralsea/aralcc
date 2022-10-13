@@ -57,4 +57,9 @@ assert 1 "a = 1; a;"
 assert 36 "x = 6; x*x;"
 assert 9 "a = 4; b = 5; a+b;"
 assert 2 "a=b=1; a+b;"
+
+assert 1 "foo = 1; foo;"
+assert 36 "bar = 6; bar*bar;"
+assert 9 "foo = 4; bar = 5; foo+bar;"
+assert 2 "foo=bar=1; foo+bar;"
 echo OK

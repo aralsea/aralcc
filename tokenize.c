@@ -31,7 +31,7 @@ bool consume(char *op) {
     return true;
 }
 
-//次のトークンがローカル変数（アルファベット1文字）の時には，
+//次のトークンがローカル変数（アルファベット複数文字）の時には，
 // 今見てるトークンを返しトークンを1つ読み進める。それ以外の場合にはNULLを返す。
 Token *consume_ident() {
     if (token->kind != TK_IDENT) return NULL;
@@ -61,6 +61,14 @@ int expect_number() {
 //今見てるトークンがEOFかどうか
 bool at_eof() {
     return token->kind == TK_EOF;
+}
+
+bool is_alphabet(char c) {
+    return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || (c == '_');
+}
+
+bool is_alpahet_num(char c) {
+    return is_alphabet(c) || ('0' <= c && c <= '9');
 }
 
 //新しいトークンを作成しcurに繋げ，その繋げたトークンへのポインタを返す
@@ -109,8 +117,12 @@ Token *tokenize() {
             continue;
         }
 
-        if ('a' <= *p && *p <= 'z') {
-            cur = new_token(TK_IDENT, cur, p++, 1);
+        if (is_alphabet(*p)) {
+            char *q = p;
+            while (is_alpahet_num(*p)) {
+                p++;
+            }
+            cur = new_token(TK_IDENT, cur, q, p - q);
             continue;
         }
 

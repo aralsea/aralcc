@@ -9,18 +9,22 @@ int main(int argc, char **argv) {
     //トークナイズ&パースし，結果をcodeに保存
     user_input = argv[1];
     token = tokenize();
+    locals = calloc(1, sizeof(LVar));
+    locals->next = NULL;
+    locals->name = "";
+    locals->len = 0;
+    locals->offset = 0;
     program();
 
-        //アセンブリの最初の部分
+    //アセンブリの最初の部分
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     printf("main:\n");
 
     //プロローグ
-    //変数26個分の領域をスタックに確保
     printf("    push rbp\n");
     printf("    mov rbp, rsp\n");
-    printf("    sub rsp, 208\n");
+    printf("    sub rsp, %d\n", locals->offset);
 
     // higher_address <- [stack_base, $, ..., $,
     // $, 開始時のRBPの値, a, b, ..., y, z, $, $, ...] ->lower_address

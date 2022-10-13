@@ -29,6 +29,8 @@ Token *consume_ident();
 void expect(char *op);
 int expect_number();
 bool at_eof();
+bool is_alphabet(char c);
+bool is_alphabet_num(char c);
 Token *new_token(Tokenkind kind, Token *cur, char *str, int len);
 Token *tokenize();
 //トークナイザここまで
@@ -73,6 +75,15 @@ Node *mul();
 Node *unary();    //\pm primary
 Node *primary();  // num or ident or (expr)
 
+typedef struct LVar LVar;
+
+struct LVar {
+    LVar *next;  //次のローカル変数
+    char *name;  //変数名
+    int len;     //変数名の長さ
+    int offset;  // RBPからのオフセット
+};
+LVar *find_lvar(Token *tok);
 //パーサここまで
 
 //アセンブリコードジェネレータ
@@ -84,5 +95,6 @@ void codegen(Node *node);
 extern char *user_input;
 extern Token *token;
 extern Node *code[100];
+extern LVar *locals;
 //セミコロン区切りの文を表す木の値を，100個まで保存する配列，最後にはNULLポインタが入ってる．
 //グローバル変数宣言ここまで
