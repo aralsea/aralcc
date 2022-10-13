@@ -2,15 +2,15 @@ CFLAGS=-std=c11 -g -static
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
 
-aralc: $(OBJS)
-		$(CC) -o aralc $(OBJS) $(LDFLAGS)
+aralcc: $(OBJS)
+		$(CC) -o aralcc $(OBJS) $(LDFLAGS)
 
-$(OBJS): aralc.h
+$(OBJS): aralcc.h
 
-test: aralc
+test: aralcc
 		./test.sh
 
 clean:
-		rm -f aralc *.o *~ tmp*
+		rm -f aralcc *.o *~ tmp*
 
 .PHONY: test clean

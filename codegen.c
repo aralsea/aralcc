@@ -1,4 +1,4 @@
-#include "aralc.h"
+#include "aralcc.h"
 
 //アセンブリジェネレータ
 void codegen(Node *node) {

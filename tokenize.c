@@ -1,4 +1,4 @@
-#include "aralc.h"
+#include "aralcc.h"
 
 // トークナイザの実装
 Token *token;  //今見てるトークン
