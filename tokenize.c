@@ -3,9 +3,9 @@
 // トークナイザの実装
 Token *token;  //今見てるトークン
 
-//エラーメッセージ
 char *user_input;  //入力されたソースコード
 
+//エラーメッセージ
 //エラー箇所の報告
 void error_at(char *loc, char *fmt, ...) {
     /** locがエラー該当箇所，fmtはフォーマット文字列 **/
@@ -31,12 +31,21 @@ bool consume(char *op) {
     return true;
 }
 
+//次のトークンがローカル変数（アルファベット1文字）の時には，
+// 今見てるトークンを返しトークンを1つ読み進める。それ以外の場合にはNULLを返す。
+Token *consume_ident() {
+    if (token->kind != TK_IDENT) return NULL;
+    Token *t = token;
+    token = token->next;
+    return t;
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len ||
         memcmp(op, token->str, token->len))
-        error_at(token->str, "'%c'ではありません", op);
+        error_at(token->str, "'%s'ではありません", op);
     token = token->next;
 }
 
@@ -65,6 +74,7 @@ Token *new_token(Tokenkind kind, Token *cur, char *str, int len) {
     return tok;
 }
 
+// user_inputを読み込んでトークンの隣接リストを作成し，その先頭へのポインタを返す
 Token *tokenize() {
     char *p = user_input;
     Token head;
@@ -83,7 +93,7 @@ Token *tokenize() {
             continue;
         }
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-            *p == ')' || *p == '<' || *p == '>') {
+            *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=') {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             //,cur, p);
             // p++; と書いても同じ
@@ -96,6 +106,11 @@ Token *tokenize() {
             char *q = p;
             cur->val = strtol(p, &p, 10);
             cur->len = p - q;
+            continue;
+        }
+
+        if ('a' <= *p && *p <= 'z') {
+            cur = new_token(TK_IDENT, cur, p++, 1);
             continue;
         }
 

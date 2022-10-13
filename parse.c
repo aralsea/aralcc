@@ -1,6 +1,7 @@
 #include "aralcc.h"
 
 //パーサ
+Node *code[100];
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
     Node *node = calloc(1, sizeof(Node));
@@ -17,19 +18,45 @@ Node *new_node_num(int val) {
     return node;
 }
 
+void *program();
+Node *statement();
 Node *expr();
+Node *assign();
 Node *equality();
 Node *relational();
 Node *add();
 Node *mul();
 Node *unary();    //\pm primary
-Node *primary();  // num or (expr)
+Node *primary();  // num or ident or (expr)
 
+void *program() {
+    //トークンの列から構文木を作成し，セミコロン区切りごとにcodeに入れる
+    int i = 0;
+    while (!at_eof()) {
+        code[i++] = statement();
+    }
+    code[i] = NULL;  //最後にはNULLポインタを入れる
+}
+Node *statement() {
+    Node *node = expr();
+    expect(";");
+    return node;
+}
 Node *expr() {
     //今見てるトークンからexprの構文木を作成する
     //返り値はその木の根を表すNode
-    Node *node = equality();
+    Node *node = assign();
     return node;
+}
+Node *assign() {
+    Node *node = equality();
+    while (1) {
+        if (consume("=")) {
+            node = new_node(ND_ASSIGN, node, assign());
+        } else {
+            return node;
+        }
+    }
 }
 Node *equality() {
     Node *node = relational();
@@ -96,6 +123,14 @@ Node *primary() {
     if (consume("(")) {
         Node *node = expr();
         expect(")");
+        return node;
+    }
+
+    Token *tok = consume_ident();
+    if (tok != NULL) {
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_LVAR;
+        node->offset = (tok->str[0] - 'a' + 1) * 8;
         return node;
     }
     return new_node_num(expect_number());

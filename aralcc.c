@@ -6,17 +6,42 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    //トークナイズ&パースし，結果をcodeに保存
     user_input = argv[1];
     token = tokenize();
-    Node *node = expr();
+    program();
 
+        //アセンブリの最初の部分
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     printf("main:\n");
 
-    codegen(node);
+    //プロローグ
+    //変数26個分の領域をスタックに確保
+    printf("    push rbp\n");
+    printf("    mov rbp, rsp\n");
+    printf("    sub rsp, 208\n");
 
-    printf("    pop rax\n");
+    // higher_address <- [stack_base, $, ..., $,
+    // $, 開始時のRBPの値, a, b, ..., y, z, $, $, ...] ->lower_address
+    //         ^rbp                    ^rsp
+
+    //先頭のstatementから順にアセンブリ生成
+    for (int i = 0; code[i] != NULL; i++) {
+        codegen(code[i]);
+        //この時点でcode[i]の計算結果がスタックトップに残っているので，pop
+        printf("    pop rax\n");
+    }
+
+    //この時点で higher_address <- [stack_base, $, ..., $,
+    // $, 開始時のRBPの値, a, b, ..., y, z, $, $, ...] ->lower_address
+    //         ^rbp                    ^rsp
+    //かつ rax に最後の式の計算結果が入ってる
+
+    //最後の式の結果がRAXにあるので，それを返り値とする（retはraxに入ってる値をreturnする命令）
+    //このとき「開始時のRBPの値」をスタックに残さないようにpopしてからretする
+    printf("    mov rsp, rbp\n");
+    printf("    pop rbp\n");
     printf("    ret\n");
     return 0;
 }

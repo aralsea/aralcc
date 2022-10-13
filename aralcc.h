@@ -8,6 +8,7 @@
 //トークナイザ
 typedef enum {
     TK_RESERVED,             //記号
+    TK_IDENT,                //識別子
     TK_NUM,                  //整数
     TK_EOF                   // 終端
 } Tokenkind;                 //トークンの種類を表すenum
@@ -24,6 +25,7 @@ struct Token {
 
 void error_at(char *loc, char *fmt, ...);
 bool consume(char *op);
+Token *consume_ident();
 void expect(char *op);
 int expect_number();
 bool at_eof();
@@ -33,16 +35,17 @@ Token *tokenize();
 
 //パーサ
 typedef enum {
-    ND_ADD,
-    ND_SUB,
-    ND_MUL,
-    ND_DIV,
-    ND_NUM,
-    ND_EQ,
-    ND_NEQ,
-    ND_LEQ,
-
-    ND_LNEQ,
+    ND_ADD,     // +
+    ND_SUB,     // -
+    ND_MUL,     // *
+    ND_DIV,     // /
+    ND_NUM,     // 数
+    ND_EQ,      // ==
+    ND_NEQ,     // !=
+    ND_LEQ,     // <
+    ND_LNEQ,    // <=
+    ND_ASSIGN,  //代入の'='
+    ND_LVAR,    //ローカル変数
 
 } NodeKind;
 
@@ -50,26 +53,36 @@ typedef struct Node Node;
 
 struct Node {
     NodeKind kind;
-    Node *lhs;  //左の子
-    Node *rhs;  //右の子
-    int val;    // kind=ND_NUMのとき，その値
+    Node *lhs;   //左の子
+    Node *rhs;   //右の子
+    int val;     // kind = ND_NUM のとき，その値
+    int offset;  // kind = ND_LVAR
+                 // のとき，そのローカル変数のベースポインタからのoffset
 };
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
+
+void *program();
+Node *statement();
 Node *expr();
+Node *assign();
 Node *equality();
 Node *relational();
 Node *add();
 Node *mul();
 Node *unary();    //\pm primary
-Node *primary();  // num or (expr)
+Node *primary();  // num or ident or (expr)
+
 //パーサここまで
 
 //アセンブリコードジェネレータ
+void gen_lval(Node *node);
 void codegen(Node *node);
 //アセンブリコードジェネレータここまで
 
 //グローバル変数宣言
 extern char *user_input;
 extern Token *token;
+extern Node *code[100];
+//セミコロン区切りの文を表す木の値を，100個まで保存する配列，最後にはNULLポインタが入ってる．
 //グローバル変数宣言ここまで
