@@ -10,6 +10,10 @@ typedef enum {
     TK_RESERVED,             //記号
     TK_IDENT,                //識別子
     TK_NUM,                  //整数
+    TK_RETURN,               // return
+    TK_IF,                   // if
+    TK_WHILE,                // while
+    TK_FOR,                  // for
     TK_EOF                   // 終端
 } Tokenkind;                 //トークンの種類を表すenum
 typedef struct Token Token;  //これがないとTokenの初期化時に struct Token{*, *,
@@ -48,6 +52,7 @@ typedef enum {
     ND_LNEQ,    // <=
     ND_ASSIGN,  //代入の'='
     ND_LVAR,    //ローカル変数
+    ND_RETURN,  // return
 
 } NodeKind;
 

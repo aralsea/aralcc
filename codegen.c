@@ -14,6 +14,19 @@ void codegen(Node *node) {
     // node
     // を根とする構文木から，「その式が表す値の計算結果をスタックトップに保存する」アセンブリを生成する
     //代入式の場合は,「代入を実行し，さらに代入される値をスタックトップに保存する」アセンブリを生成する
+    if (node->kind == ND_RETURN) {
+        codegen(node->lhs);
+        //ここで終わってしまうとこのgen()が再帰で呼ばれたときにさらに処理が進んでしまう
+        //例えば"a=1; return a; return
+        // a+1;"のとき2個目のreturnを見に行ってしまう
+        //そこで以下にret文を出力することで打ち切る（アセンブリの出力は続くが，実行は最初のret文で終わる）
+        // main関数が出力するret文と被るが，ret文は一回しか通らないのでとりあえずok
+        printf("    pop rax\n");
+        printf("    mov rsp, rbp\n");
+        printf("    pop rbp\n");
+        printf("    ret\n");
+        return;
+    }
     switch (node->kind) {
         case ND_NUM:
             printf("    push %d\n", node->val);

@@ -62,4 +62,14 @@ assert 1 "foo = 1; foo;"
 assert 36 "bar = 6; bar*bar;"
 assert 9 "foo = 4; bar = 5; foo+bar;"
 assert 2 "foo=bar=1; foo+bar;"
+
+assert 1 "foo = 1; return foo;"
+assert 36 "bar = 6; return bar*bar;"
+assert 9 "foo = 4; bar = 5; return foo+bar;"
+assert 2 "foo=bar=1; return foo+bar;"
+
+assert 2 "foo = 1; return 2; foo;"
+assert 36 "bar = 6; return bar*bar; return bar;"
+assert 9 "foo = 4; bar = 5; return foo+bar; bar = 3;"
+assert 2 "foo=bar=1; return foo+bar; x;"
 echo OK

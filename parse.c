@@ -19,6 +19,23 @@ Node *new_node_num(int val) {
     return node;
 }
 
+/*
+program    = *statement
+statement  = expr ";"
+           | "return" expr ";"
+           | "if" "(" expr ")" statement ("else" statement)?
+           | "while" "(" expr ")" statement
+           | "for" "(" expr? ";" expr? ";" expr? ")" statement
+expr       = assign
+assign     = equality ("=" assign)?
+equality   = relational ("==" relational | "!=" relational)*
+relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+add        = mul ("+" mul | "-" mul)*
+mul        = unary ("*" unary | "/" unary)*
+unary      = ("+" | "-")? primary
+primary    = num | ident | "(" expr ")"
+*/
+
 void *program();
 Node *statement();
 Node *expr();
@@ -39,7 +56,14 @@ void *program() {
     code[i] = NULL;  //最後にはNULLポインタを入れる
 }
 Node *statement() {
-    Node *node = expr();
+    Node *node;
+    if (consume("return")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_RETURN;
+        node->lhs = expr();
+    } else {
+        node = expr();
+    }
     expect(";");
     return node;
 }
