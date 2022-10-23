@@ -75,6 +75,15 @@ Node *statement() {
         if (consume("else")) {
             node->els = statement();
         }
+    } else if (consume("while")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_WHILE;
+
+        expect("(");
+        node->condition = expr();
+        expect(")");
+
+        node->then = statement();
     } else {
         node = expr();
         expect(";");

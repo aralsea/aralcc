@@ -55,6 +55,20 @@ void codegen(Node *node) {
         }
         jump_label++;
         return;
+    } else if (node->kind == ND_WHILE) {
+        int label = jump_label;
+
+        printf(".Lbegin%d:\n", label);
+        codegen(node->condition);
+        printf("    pop rax\n");
+        printf("    cmp rax, 0\n");
+        printf("    je .Lend%d\n", label);
+        codegen(node->then);  // thenの計算結果
+        printf("    jmp .Lbegin%d\n", label);
+        printf(".Lend%d:\n", label);
+
+        jump_label++;
+        return;
     }
 
     //以下ローカル変数つき電卓の部分

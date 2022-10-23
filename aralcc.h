@@ -72,7 +72,7 @@ struct Node {
     int offset;  // kind = ND_LVAR
                  // のとき，そのローカル変数のベースポインタからのoffset
 
-    /*if文用のノード*/
+    /*if文，while文用のノード*/
     Node *condition;
     Node *then;
     Node *els;
