@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
         printf("    pop rax\n");
     }
 
-    //この時点で higher_address <- [stack_base, $, ..., $,
+        //この時点で higher_address <- [stack_base, $, ..., $,
     // $, 開始時のRBPの値, a, b, ..., y, z, $, $, ...] ->lower_address
     //         ^rbp                    ^rsp
     //かつ rax に最後の式の計算結果が入ってる

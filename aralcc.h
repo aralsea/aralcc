@@ -58,6 +58,7 @@ typedef enum {
     ND_ELSE,    // else
     ND_WHILE,   // while
     ND_FOR,     // for
+    ND_BLOCK,   // {statement statement ...}
 
 } NodeKind;
 
@@ -65,6 +66,8 @@ typedef struct Node Node;
 
 struct Node {
     NodeKind kind;
+    Node *next;  // {...}内のstatementのroot nodeの場合，その次のstatementのroot
+                 // nodeをもつ
     Node *lhs;  //左の子
     Node *rhs;  //右の子
 
@@ -78,20 +81,10 @@ struct Node {
     Node *els;
     Node *init;
     Node *inc;
-};
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
-Node *new_node_num(int val);
 
-void *program();
-Node *statement();
-Node *expr();
-Node *assign();
-Node *equality();
-Node *relational();
-Node *add();
-Node *mul();
-Node *unary();    //\pm primary
-Node *primary();  // num or ident or (expr)
+    // blockの中身，ひとつ次のstatementはbody->nextで参照する
+    Node *body;
+};
 
 typedef struct LVar LVar;
 
@@ -102,6 +95,20 @@ struct LVar {
     int offset;  // RBPからのオフセット
 };
 LVar *find_lvar(Token *tok);
+
+Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
+Node *new_node_num(int val);
+
+void program();
+Node *statement();
+Node *expr();
+Node *assign();
+Node *equality();
+Node *relational();
+Node *add();
+Node *mul();
+Node *unary();    //\pm primary
+Node *primary();  // num or ident or (expr)
 //パーサここまで
 
 //アセンブリコードジェネレータ

@@ -22,6 +22,7 @@ Node *new_node_num(int val) {
 /*
 program    = *statement
 statement  = expr ";"
+           | "{" statement* "}"
            | "return" expr ";"
            | "if" "(" expr ")" statement ("else" statement)?
            | "while" "(" expr ")" statement
@@ -36,7 +37,7 @@ unary      = ("+" | "-")? primary
 primary    = num | ident | "(" expr ")"
 */
 
-void *program();
+void program();
 Node *statement();
 Node *expr();
 Node *assign();
@@ -47,7 +48,7 @@ Node *mul();
 Node *unary();    //\pm primary
 Node *primary();  // num or ident or (expr)
 
-void *program() {
+void program() {
     //トークンの列から構文木を作成し，セミコロン区切りごとにcodeに入れる
     int i = 0;
     while (!at_eof()) {
@@ -55,9 +56,23 @@ void *program() {
     }
     code[i] = NULL;  //最後にはNULLポインタを入れる
 }
+
 Node *statement() {
     Node *node;
-    if (consume("return")) {
+    if (consume("{")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_BLOCK;
+
+        Node head;
+        head.next = NULL;
+
+        Node *cur = &head;
+        while (!consume("}")) {
+            cur->next = statement();
+            cur = cur->next;
+        }
+        node->body = head.next;
+    } else if (consume("return")) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
         node->lhs = expr();

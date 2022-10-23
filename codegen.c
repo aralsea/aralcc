@@ -15,8 +15,18 @@ void gen_lval(Node *node) {
 void codegen(Node *node) {
     // node
     // を根とする構文木から，「その式が表す値の計算結果をスタックトップに保存する」アセンブリを生成する
-    //代入式の場合は,「代入を実行し，さらに代入される値をスタックトップに保存する」アセンブリを生成する
-    if (node->kind == ND_RETURN) {
+    //代入式の場合は,「代入を実行し，さらに代入された値をスタックトップに保存する」アセンブリを生成する
+    if (node->kind == ND_BLOCK) {
+        Node *cur = node->body;
+        while (cur != NULL) {
+            codegen(cur);
+            if (cur->next != NULL) {
+                printf("    pop rax\n");
+            }
+            cur = cur->next;
+        }
+        return;
+    } else if (node->kind == ND_RETURN) {
         codegen(node->lhs);
         //ここで終わってしまうとこのgen()が再帰で呼ばれたときにさらに処理が進んでしまう
         //例えば"a=1; return a; return
