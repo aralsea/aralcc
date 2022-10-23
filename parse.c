@@ -34,7 +34,7 @@ relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 add        = mul ("+" mul | "-" mul)*
 mul        = unary ("*" unary | "/" unary)*
 unary      = ("+" | "-")? primary
-primary    = num | ident | "(" expr ")"
+primary    = num | ident ("(" ")")? | "(" expr ")" //fは変数，f()は関数
 */
 
 void program();
@@ -215,20 +215,28 @@ Node *primary() {
     Token *tok = consume_ident();
     if (tok != NULL) {
         Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_LVAR;
-
-        LVar *lvar = find_lvar(tok);
-        if (lvar != NULL) {
-            node->offset = lvar->offset;
+        if (consume("(")) {
+            //関数のとき
+            node->kind = ND_FUNCCALL;
+            node->funcname = calloc(tok->len + 1, sizeof(char));
+            strncpy(node->funcname, tok->str, tok->len);
+            expect(")");
         } else {
-            // localsの先頭に新しい変数名を記録
-            lvar = calloc(1, sizeof(LVar));
-            lvar->next = locals;
-            lvar->name = tok->str;
-            lvar->len = tok->len;
-            lvar->offset = locals->offset + 8;
-            node->offset = lvar->offset;
-            locals = lvar;
+            //変数のとき
+            node->kind = ND_LVAR;
+            LVar *lvar = find_lvar(tok);
+            if (lvar != NULL) {
+                node->offset = lvar->offset;
+            } else {
+                // localsの先頭に新しい変数名を記録
+                lvar = calloc(1, sizeof(LVar));
+                lvar->next = locals;
+                lvar->name = tok->str;
+                lvar->len = tok->len;
+                lvar->offset = locals->offset + 8;
+                node->offset = lvar->offset;
+                locals = lvar;
+            }
         }
         return node;
     }

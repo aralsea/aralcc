@@ -42,28 +42,28 @@ Token *tokenize();
 
 //パーサ
 typedef enum {
-    ND_ADD,     // +
-    ND_SUB,     // -
-    ND_MUL,     // *
-    ND_DIV,     // /
-    ND_NUM,     // 数
-    ND_EQ,      // ==
-    ND_NEQ,     // !=
-    ND_LEQ,     // <
-    ND_LNEQ,    // <=
-    ND_ASSIGN,  //代入の'='
-    ND_LVAR,    //ローカル変数
-    ND_RETURN,  // return
-    ND_IF,      // if
-    ND_ELSE,    // else
-    ND_WHILE,   // while
-    ND_FOR,     // for
-    ND_BLOCK,   // {statement statement ...}
+    ND_ADD,       // +
+    ND_SUB,       // -
+    ND_MUL,       // *
+    ND_DIV,       // /
+    ND_NUM,       // 数
+    ND_EQ,        // ==
+    ND_NEQ,       // !=
+    ND_LEQ,       // <
+    ND_LNEQ,      // <=
+    ND_ASSIGN,    //代入の'='
+    ND_LVAR,      //ローカル変数
+    ND_RETURN,    // return
+    ND_IF,        // if
+    ND_ELSE,      // else
+    ND_WHILE,     // while
+    ND_FOR,       // for
+    ND_BLOCK,     // {statement statement ...}
+    ND_FUNCCALL,  // 関数呼び出し
 
 } NodeKind;
 
 typedef struct Node Node;
-
 struct Node {
     NodeKind kind;
     Node *next;  // {...}内のstatementのroot nodeの場合，その次のstatementのroot
@@ -74,6 +74,7 @@ struct Node {
     int val;     // kind = ND_NUM のとき，その値
     int offset;  // kind = ND_LVAR
                  // のとき，そのローカル変数のベースポインタからのoffset
+    char *funcname;  // kind = ND_FUNCのとき，その名前，番兵付き
 
     /*if文，while文，for文用のノード*/
     Node *condition;
@@ -87,14 +88,12 @@ struct Node {
 };
 
 typedef struct LVar LVar;
-
 struct LVar {
     LVar *next;  //次のローカル変数
     char *name;  //変数名
     int len;     //変数名の長さ
     int offset;  // RBPからのオフセット
 };
-LVar *find_lvar(Token *tok);
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
@@ -109,6 +108,8 @@ Node *add();
 Node *mul();
 Node *unary();    //\pm primary
 Node *primary();  // num or ident or (expr)
+
+LVar *find_lvar(Token *tok);
 //パーサここまで
 
 //アセンブリコードジェネレータ

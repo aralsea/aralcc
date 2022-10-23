@@ -12,6 +12,7 @@ void gen_lval(Node *node) {
     printf("    sub rax, %d\n", node->offset);
     printf("    push rax\n");
 }
+
 void codegen(Node *node) {
     // node
     // を根とする構文木から，「その式が表す値の計算結果をスタックトップに保存する」アセンブリを生成する
@@ -113,6 +114,12 @@ void codegen(Node *node) {
             printf("    pop rax\n");  //そのアドレスをraxにpop
             printf(
                 "    mov rax, [rax]\n");  // raxにそのアドレスにいる値を代入，未定義変数なら何が入ってるかわからない
+            printf("    push rax\n");
+            return;
+        case ND_FUNCCALL:
+            printf(
+                "    call %s\n",
+                node->funcname);  // x86-64のABIによると，返り値はraxに入ってる
             printf("    push rax\n");
             return;
         case ND_ASSIGN:
