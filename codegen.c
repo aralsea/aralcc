@@ -1,5 +1,7 @@
 #include "aralcc.h"
 
+int jump_label;
+
 //アセンブリジェネレータ
 void gen_lval(Node *node) {
     // nodeを左辺値と解釈し，それが表すアドレスをスタックにpushする
@@ -26,7 +28,36 @@ void codegen(Node *node) {
         printf("    pop rbp\n");
         printf("    ret\n");
         return;
+    } else if (node->kind == ND_IF) {
+        int label = jump_label;
+        if (node->els != NULL) {
+            codegen(
+                node->condition);  //この時点でスタックトップにconditionの計算結果がある
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je .Lelse%d\n", label);
+
+            codegen(node->then);  // thenの計算結果
+            printf("    jmp .Lend%d\n", label);
+
+            printf(".Lelse%d:\n", label);
+            codegen(node->els);
+
+            printf(".Lend%d:\n", label);
+
+        } else {
+            codegen(node->condition);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je .Lend%d\n", label);
+            codegen(node->then);  // thenの計算結果
+            printf(".Lend%d:\n", label);
+        }
+        jump_label++;
+        return;
     }
+
+    //以下ローカル変数つき電卓の部分
     switch (node->kind) {
         case ND_NUM:
             printf("    push %d\n", node->val);

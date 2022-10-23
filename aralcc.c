@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
     //         ^rbp                    ^rsp
 
     //先頭のstatementから順にアセンブリ生成
+    jump_label = 0;
     for (int i = 0; code[i] != NULL; i++) {
         codegen(code[i]);
         //この時点でcode[i]の計算結果がスタックトップに残っているので，pop

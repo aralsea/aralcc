@@ -12,6 +12,7 @@ typedef enum {
     TK_NUM,                  //整数
     TK_RETURN,               // return
     TK_IF,                   // if
+    TK_ELSE,                 // else
     TK_WHILE,                // while
     TK_FOR,                  // for
     TK_EOF                   // 終端
@@ -53,6 +54,10 @@ typedef enum {
     ND_ASSIGN,  //代入の'='
     ND_LVAR,    //ローカル変数
     ND_RETURN,  // return
+    ND_IF,      // if
+    ND_ELSE,    // else
+    ND_WHILE,   // while
+    ND_FOR,     // for
 
 } NodeKind;
 
@@ -60,11 +65,17 @@ typedef struct Node Node;
 
 struct Node {
     NodeKind kind;
-    Node *lhs;   //左の子
-    Node *rhs;   //右の子
+    Node *lhs;  //左の子
+    Node *rhs;  //右の子
+
     int val;     // kind = ND_NUM のとき，その値
     int offset;  // kind = ND_LVAR
                  // のとき，そのローカル変数のベースポインタからのoffset
+
+    /*if文用のノード*/
+    Node *condition;
+    Node *then;
+    Node *els;
 };
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
@@ -99,7 +110,8 @@ void codegen(Node *node);
 //グローバル変数宣言
 extern char *user_input;
 extern Token *token;
-extern Node *code[100];
+extern Node *code
+    [100];  //セミコロン区切りの文を表す木の値を，100個まで保存する配列，最後にはNULLポインタが入ってる．
 extern LVar *locals;
-//セミコロン区切りの文を表す木の値を，100個まで保存する配列，最後にはNULLポインタが入ってる．
+extern int jump_label;  //アセンブリにおけるジャンプ先をラベルするためのカウンタ
 //グローバル変数宣言ここまで
