@@ -34,7 +34,8 @@ relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 add        = mul ("+" mul | "-" mul)*
 mul        = unary ("*" unary | "/" unary)*
 unary      = ("+" | "-")? primary
-primary    = num | ident ("(" ")")? | "(" expr ")" //fは変数，f()は関数
+primary    = num | ident ("(" (expr ( "," expr)*)? ")")? | "(" expr ")"
+//fは変数，f()は関数
 */
 
 void program();
@@ -220,7 +221,26 @@ Node *primary() {
             node->kind = ND_FUNCCALL;
             node->funcname = calloc(tok->len + 1, sizeof(char));
             strncpy(node->funcname, tok->str, tok->len);
-            expect(")");
+
+            if (consume(")")) {
+                node->argnum = 0;
+            } else {
+                //引数を5個まで受け取る
+                int count = 0;
+                while (1) {
+                    node->arg[count] = expr();
+                    count++;
+                    if (count == 6 && consume(",")) {
+                        error_at(token->str,
+                                 "関数の引数は6個以下でないといけません．");
+                    }
+                    consume(",");
+                    if (consume(")")) {
+                        break;
+                    }
+                }
+                node->argnum = count;
+            }
         } else {
             //変数のとき
             node->kind = ND_LVAR;

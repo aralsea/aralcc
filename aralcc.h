@@ -75,6 +75,8 @@ struct Node {
     int offset;  // kind = ND_LVAR
                  // のとき，そのローカル変数のベースポインタからのoffset
     char *funcname;  // kind = ND_FUNCのとき，その名前，番兵付き
+    Node *arg[6];    //引数を格納する配列
+    int argnum;      //引数の個数
 
     /*if文，while文，for文用のノード*/
     Node *condition;

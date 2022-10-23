@@ -117,6 +117,33 @@ void codegen(Node *node) {
             printf("    push rax\n");
             return;
         case ND_FUNCCALL:
+            for (int i = 0; i < node->argnum; i++) {
+                codegen(node->arg[i]);
+                //この時点でスタックトップにはarg[i]の値が入ってる
+                // x86-64
+                // linuxでは初めの6個の引数は指定されたレジスタに格納された状態で関数呼び出しをすると決まっている(ABI参照)
+                switch (i) {
+                    case 0:
+                        printf("    pop rdi\n");
+                        break;
+                    case 1:
+                        printf("    pop rsi\n");
+                        break;
+                    case 2:
+                        printf("    pop rdx\n");
+                        break;
+                    case 3:
+                        printf("    pop rcx\n");
+                        break;
+                    case 4:
+                        printf("    pop r8\n");
+                        break;
+                    case 5:
+                        printf("    pop r9\n");
+                        break;
+                }
+            }
+
             printf(
                 "    call %s\n",
                 node->funcname);  // x86-64のABIによると，返り値はraxに入ってる

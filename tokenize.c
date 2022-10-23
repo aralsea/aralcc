@@ -22,7 +22,7 @@ void error_at(char *loc, char *fmt, ...) {
 }
 
 // 次のトークンが期待している記号（文字列）のときには、トークンを1つ読み進めて
-// 真を返す。それ以外の場合には偽を返す。
+// 真を返す。それ以外の場合には何もせず偽を返す。
 bool consume(char *op) {
     if ((token->kind != TK_RESERVED && token->kind != TK_RETURN &&
          token->kind != TK_IF && token->kind != TK_ELSE &&
@@ -104,7 +104,7 @@ Token *tokenize() {
         }
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
             *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=' ||
-            *p == '{' || *p == '}') {
+            *p == '{' || *p == '}' || *p == ',') {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             //,cur, p);
             // p++; と書いても同じ
