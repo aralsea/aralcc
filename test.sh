@@ -78,4 +78,6 @@ assert 2 "if(1+1) return 2; else return 3;"
 
 assert 10 "x=0; while(x<10) x=x+1; return x;"
 assert 55 "x=5; sum=5; while(sum<=50) sum = sum + x; return sum;"
+
+assert 45 "sum = 0;for(x=0;x<10;x=x+1) sum = sum + x; return sum;"
 echo OK

@@ -84,6 +84,29 @@ Node *statement() {
         expect(")");
 
         node->then = statement();
+    } else if (consume("for")) {
+        // for(init; condition; inc) statement
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_FOR;
+
+        expect("(");
+        if (!consume(";")) {
+            node->init = expr();
+        }
+        expect(";");
+        if (!consume(";")) {
+            node->condition = expr();
+        } else {
+            // conditionが指定されてないときは常に真を表す整数1が入ってるとみなす
+            node->condition = new_node_num(1);
+        }
+        expect(";");
+        if (!consume(")")) {
+            node->inc = expr();
+        }
+        expect(")");
+
+        node->then = statement();
     } else {
         node = expr();
         expect(";");
