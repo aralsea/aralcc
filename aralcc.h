@@ -33,6 +33,7 @@ bool consume(char *op);
 Token *consume_ident();
 void expect(char *op);
 int expect_number();
+char *expect_ident();
 bool at_eof();
 bool is_alphabet(char c);
 bool is_alphabet_num(char c);
@@ -97,6 +98,13 @@ struct LVar {
     int offset;  // RBPからのオフセット
 };
 
+typedef struct Function Function;
+struct Function {
+    char *name;    //関数名
+    Node *node;    //{...}の中身
+    LVar *locals;  //関数内ローカル変数の一覧
+};
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 
@@ -117,12 +125,13 @@ LVar *find_lvar(Token *tok);
 //アセンブリコードジェネレータ
 void gen_lval(Node *node);
 void codegen(Node *node);
+void codegen_func(Function *func);
 //アセンブリコードジェネレータここまで
 
 //グローバル変数宣言
 extern char *user_input;
 extern Token *token;
-extern Node *code
+extern Function *code
     [100];  //セミコロン区切りの文を表す木の値を，100個まで保存する配列，最後にはNULLポインタが入ってる．
 extern LVar *locals;
 extern int jump_label;  //アセンブリにおけるジャンプ先をラベルするためのカウンタ

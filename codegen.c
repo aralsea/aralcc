@@ -203,3 +203,18 @@ void codegen(Node *node) {
 
     printf("    push rax\n");
 }
+
+void codegen_func(Function *func) {
+    printf(".globl %s\n", func->name);
+    printf("%s:\n", func->name);
+
+    printf("    push rbp\n");
+    printf("    mov rbp, rsp\n");
+    printf("    sub rsp, %d\n", func->locals->offset);
+
+    codegen(func->node);
+
+    printf("    mov rsp, rbp\n");
+    printf("    pop rbp\n");
+    printf("    ret\n");
+}

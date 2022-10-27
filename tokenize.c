@@ -60,6 +60,16 @@ int expect_number() {
     return val;
 }
 
+char *expect_ident() {
+    if (token->kind != TK_IDENT)
+        error_at(token->str, "関数名または変数名ではありません");
+
+    char *s = calloc(token->len + 1, sizeof(char));
+    strncpy(s, token->str, token->len);
+    token = token->next;
+    return s;
+}
+
 //今見てるトークンがEOFかどうか
 bool at_eof() {
     return token->kind == TK_EOF;

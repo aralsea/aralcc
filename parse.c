@@ -1,7 +1,7 @@
 #include "aralcc.h"
 
 //パーサ
-Node *code[100];
+Function *code[100];
 LVar *locals;  //ローカル変数を表す連結リスト
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
@@ -21,6 +21,7 @@ Node *new_node_num(int val) {
 
 /*
 program    = *statement
+function = ident "()" "{" statement "}"
 statement  = expr ";"
            | "{" statement* "}"
            | "return" expr ";"
@@ -39,6 +40,7 @@ primary    = num | ident ("(" (expr ( "," expr)*)? ")")? | "(" expr ")"
 */
 
 void program();
+Function *function();
 Node *statement();
 Node *expr();
 Node *assign();
@@ -53,11 +55,33 @@ void program() {
     //トークンの列から構文木を作成し，セミコロン区切りごとにcodeに入れる
     int i = 0;
     while (!at_eof()) {
-        code[i++] = statement();
+        code[i++] = function();
     }
     code[i] = NULL;  //最後にはNULLポインタを入れる
 }
 
+Function *function() {
+    Function *func = calloc(1, sizeof(Function));
+
+    func->name = expect_ident();
+    expect("(");
+    expect(")");
+
+    locals = calloc(1, sizeof(LVar));
+    locals->next = NULL;
+    locals->name = "";
+    locals->len = 0;
+    locals->offset = 0;
+    func->node = statement();
+
+    if (func->node->kind != ND_BLOCK) {
+        error_at(token->str, "関数本体を{...}で記述してください．");
+    }
+
+    func->locals = locals;
+
+    return func;
+}
 Node *statement() {
     Node *node;
     if (consume("{")) {
