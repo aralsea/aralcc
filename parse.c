@@ -21,7 +21,7 @@ Node *new_node_num(int val) {
 
 /*
 program    = *statement
-function = ident "()" "{" statement "}"
+function = ident "("(ident ("," ident)*)?")" "{" statement "}"
 statement  = expr ";"
            | "{" statement* "}"
            | "return" expr ";"
@@ -64,14 +64,47 @@ Function *function() {
     Function *func = calloc(1, sizeof(Function));
 
     func->name = expect_ident();
-    expect("(");
-    expect(")");
+    func->argnum = 0;
 
     locals = calloc(1, sizeof(LVar));
     locals->next = NULL;
     locals->name = "";
     locals->len = 0;
     locals->offset = 0;
+
+    expect("(");
+    if (!consume(")")) {
+        //引数を6個まで受け取る
+        int count = 0;
+        while (1) {
+            Token *tok = consume_ident();
+            if (tok == NULL) {
+                error_at(token->str, "引数が必要です．");
+            }
+            LVar *lvar = find_lvar(tok);
+            if (lvar != NULL) {
+                error_at(tok->str, "関数の引数が重複しています．");
+            }
+            lvar = calloc(1, sizeof(LVar));
+            lvar->next = locals;
+            lvar->name = tok->str;
+            lvar->len = tok->len;
+            lvar->offset = locals->offset + 8;
+            locals = lvar;
+            count++;
+            if (count == 6 && consume(",")) {
+                error_at(token->str, "関数の引数は6個以下でないといけません．");
+            }
+            if (consume(",")) {
+                continue;
+            } else if (consume(")")) {
+                break;
+            } else {
+                error_at(token->str, "引数の宣言が正しくありません．");
+            }
+        }
+        func->argnum = count;
+    }
 
     func->node = statement();
 
@@ -94,6 +127,9 @@ Node *statement() {
 
         Node *cur = &head;
         while (!consume("}")) {
+            if (token->kind == TK_EOF) {
+                error_at(token->str, "} が閉じていません．");
+            }
             cur->next = statement();
             cur = cur->next;
         }
@@ -250,7 +286,7 @@ Node *primary() {
             if (consume(")")) {
                 node->argnum = 0;
             } else {
-                //引数を5個まで受け取る
+                //引数を6個まで受け取る
                 int count = 0;
                 while (1) {
                     node->arg[count] = expr();

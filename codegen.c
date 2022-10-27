@@ -2,6 +2,7 @@
 
 int jump_label;
 char *funcname;
+char *argreg[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
 //アセンブリジェネレータ
 void gen_lval(Node *node) {
@@ -40,7 +41,7 @@ void codegen(Node *node) {
         printf("    jmp .Lend.%s\n", funcname);
         return;
     } else if (node->kind == ND_IF) {
-        int label = jump_label;
+        int label = jump_label++;
         if (node->els != NULL) {
             codegen(
                 node->condition);  //この時点でスタックトップにconditionの計算結果がある
@@ -64,10 +65,9 @@ void codegen(Node *node) {
             codegen(node->then);  // thenの計算結果
             printf(".Lend%d:\n", label);
         }
-        jump_label++;
         return;
     } else if (node->kind == ND_WHILE) {
-        int label = jump_label;
+        int label = jump_label++;
 
         printf(".Lbegin%d:\n", label);
         codegen(node->condition);
@@ -78,10 +78,9 @@ void codegen(Node *node) {
         printf("    jmp .Lbegin%d\n", label);
         printf(".Lend%d:\n", label);
 
-        jump_label++;
         return;
     } else if (node->kind == ND_FOR) {
-        int label = jump_label;
+        int label = jump_label++;
 
         if (node->init != NULL) {
             codegen(node->init);
@@ -99,7 +98,6 @@ void codegen(Node *node) {
         printf("    jmp .Lbegin%d\n", label);
         printf(".Lend%d:\n", label);
 
-        jump_label++;
         return;
     }
 
@@ -122,26 +120,7 @@ void codegen(Node *node) {
                 //この時点でスタックトップにはarg[i]の値が入ってる
                 // x86-64
                 // linuxでは初めの6個の引数は指定されたレジスタに格納された状態で関数呼び出しをすると決まっている(ABI参照)
-                switch (i) {
-                    case 0:
-                        printf("    pop rdi\n");
-                        break;
-                    case 1:
-                        printf("    pop rsi\n");
-                        break;
-                    case 2:
-                        printf("    pop rdx\n");
-                        break;
-                    case 3:
-                        printf("    pop rcx\n");
-                        break;
-                    case 4:
-                        printf("    pop r8\n");
-                        break;
-                    case 5:
-                        printf("    pop r9\n");
-                        break;
-                }
+                printf("    pop %s\n", argreg[i]);
             }
 
             printf(
@@ -216,6 +195,14 @@ void codegen_func(Function *func) {
     // $, 開始時のRBPの値, a, b, ..., y, z, $, $, ...] ->lower_address
     //         ^rbp                    ^rsp
 
+    //引数の値をレジスタから取り出してスタックの該当箇所に保存
+    for (int i = 0; i < func->argnum; i++) {
+        printf("    mov rax, rbp\n");
+        printf("    sub rax, %d\n", (i + 1) * 8);
+        printf("    mov [rax], %s\n", argreg[i]);
+    }
+
+    //関数本体のアセンブリを生成
     funcname = func->name;
     codegen(func->node);
 

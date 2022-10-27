@@ -103,6 +103,7 @@ struct Function {
     char *name;    //関数名
     Node *node;    //{...}の中身
     LVar *locals;  //関数内ローカル変数の一覧
+    int argnum;    //引数の個数
 };
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
