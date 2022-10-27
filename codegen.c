@@ -1,6 +1,7 @@
 #include "aralcc.h"
 
 int jump_label;
+char *funcname;
 
 //アセンブリジェネレータ
 void gen_lval(Node *node) {
@@ -17,6 +18,7 @@ void codegen(Node *node) {
     // node
     // を根とする構文木から，「その式が表す値の計算結果をスタックトップに保存する」アセンブリを生成する
     //代入式の場合は,「代入を実行し，さらに代入された値をスタックトップに保存する」アセンブリを生成する
+    //ただしreturn文のときはスタックトップをpopしてret文にjmpする
     if (node->kind == ND_BLOCK) {
         Node *cur = node->body;
         while (cur != NULL) {
@@ -35,9 +37,7 @@ void codegen(Node *node) {
         //そこで以下にret文を出力することで打ち切る（アセンブリの出力は続くが，実行は最初のret文で終わる）
         // main関数が出力するret文と被るが，ret文は一回しか通らないのでとりあえずok
         printf("    pop rax\n");
-        printf("    mov rsp, rbp\n");
-        printf("    pop rbp\n");
-        printf("    ret\n");
+        printf("    jmp .Lend.%s\n", funcname);
         return;
     } else if (node->kind == ND_IF) {
         int label = jump_label;
@@ -208,12 +208,25 @@ void codegen_func(Function *func) {
     printf(".globl %s\n", func->name);
     printf("%s:\n", func->name);
 
+    //プロローグ
     printf("    push rbp\n");
     printf("    mov rbp, rsp\n");
     printf("    sub rsp, %d\n", func->locals->offset);
+    // higher_address <- [stack_base, $, ..., $,
+    // $, 開始時のRBPの値, a, b, ..., y, z, $, $, ...] ->lower_address
+    //         ^rbp                    ^rsp
 
+    funcname = func->name;
     codegen(func->node);
 
+    //この時点で higher_address <- [stack_base, $, ..., $,
+    // $, 開始時のRBPの値, a, b, ..., y, z, $, $, ...] ->lower_address
+    //         ^rbp                    ^rsp
+    //かつ rax に最後の式の計算結果が入ってる
+
+    //最後の式の結果がRAXにあるので，それを返り値とする（retはraxに入ってる値をreturnする命令）
+    //このとき「開始時のRBPの値」をスタックに残さないようにpopしてからretする
+    printf(".Lend.%s:\n", funcname);
     printf("    mov rsp, rbp\n");
     printf("    pop rbp\n");
     printf("    ret\n");

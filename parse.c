@@ -72,6 +72,7 @@ Function *function() {
     locals->name = "";
     locals->len = 0;
     locals->offset = 0;
+
     func->node = statement();
 
     if (func->node->kind != ND_BLOCK) {
