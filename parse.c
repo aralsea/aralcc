@@ -34,7 +34,7 @@ equality   = relational ("==" relational | "!=" relational)*
 relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 add        = mul ("+" mul | "-" mul)*
 mul        = unary ("*" unary | "/" unary)*
-unary      = ("+" | "-")? primary
+unary      = ("+" | "-" | "*" | "&")? primary
 primary    = num | ident ("(" (expr ( "," expr)*)? ")")? | "(" expr ")"
 //fは変数，f()は関数
 */
@@ -263,6 +263,12 @@ Node *unary() {
     }
     if (consume("-")) {
         return new_node(ND_SUB, new_node_num(0), primary());
+    }
+    if (consume("&")) {
+        return new_node(ND_ADDR, primary(), NULL);
+    }
+    if (consume("*")) {
+        return new_node(ND_DEREF, primary(), NULL);
     }
     return primary();
 }

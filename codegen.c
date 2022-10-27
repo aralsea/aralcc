@@ -20,89 +20,90 @@ void codegen(Node *node) {
     // を根とする構文木から，「その式が表す値の計算結果をスタックトップに保存する」アセンブリを生成する
     //代入式の場合は,「代入を実行し，さらに代入された値をスタックトップに保存する」アセンブリを生成する
     //ただしreturn文のときはスタックトップをpopしてret文にjmpする
-    if (node->kind == ND_BLOCK) {
-        Node *cur = node->body;
-        while (cur != NULL) {
-            codegen(cur);
-            if (cur->next != NULL) {
-                printf("    pop rax\n");
+
+    switch (node->kind) {
+        case ND_BLOCK:
+            Node *cur = node->body;
+            while (cur != NULL) {
+                codegen(cur);
+                if (cur->next != NULL) {
+                    printf("    pop rax\n");
+                }
+                cur = cur->next;
             }
-            cur = cur->next;
-        }
-        return;
-    } else if (node->kind == ND_RETURN) {
-        codegen(node->lhs);
-        //ここで終わってしまうとこのgen()が再帰で呼ばれたときにさらに処理が進んでしまう
-        //例えば"a=1; return a; return
-        // a+1;"のとき2個目のreturnを見に行ってしまう
-        //そこで以下にret文を出力することで打ち切る（アセンブリの出力は続くが，実行は最初のret文で終わる）
-        // main関数が出力するret文と被るが，ret文は一回しか通らないのでとりあえずok
-        printf("    pop rax\n");
-        printf("    jmp .Lend.%s\n", funcname);
-        return;
-    } else if (node->kind == ND_IF) {
-        int label = jump_label++;
-        if (node->els != NULL) {
-            codegen(
-                node->condition);  //この時点でスタックトップにconditionの計算結果がある
+            return;
+        case ND_RETURN:
+            codegen(node->lhs);
+            //ここで終わってしまうとこのgen()が再帰で呼ばれたときにさらに処理が進んでしまう
+            //例えば"a=1; return a; return
+            // a+1;"のとき2個目のreturnを見に行ってしまう
+            //そこで以下にret文を出力することで打ち切る（アセンブリの出力は続くが，実行は最初のret文で終わる）
+            // main関数が出力するret文と被るが，ret文は一回しか通らないのでとりあえずok
             printf("    pop rax\n");
-            printf("    cmp rax, 0\n");
-            printf("    je .Lelse%d\n", label);
+            printf("    jmp .Lend.%s\n", funcname);
+            return;
+        case ND_IF: {
+            int label = jump_label++;
+            if (node->els != NULL) {
+                codegen(
+                    node->condition);  //この時点でスタックトップにconditionの計算結果がある
+                printf("    pop rax\n");
+                printf("    cmp rax, 0\n");
+                printf("    je .Lelse%d\n", label);
 
-            codegen(node->then);  // thenの計算結果
-            printf("    jmp .Lend%d\n", label);
+                codegen(node->then);  // thenの計算結果
+                printf("    jmp .Lend%d\n", label);
 
-            printf(".Lelse%d:\n", label);
-            codegen(node->els);
+                printf(".Lelse%d:\n", label);
+                codegen(node->els);
 
-            printf(".Lend%d:\n", label);
+                printf(".Lend%d:\n", label);
 
-        } else {
+            } else {
+                codegen(node->condition);
+                printf("    pop rax\n");
+                printf("    cmp rax, 0\n");
+                printf("    je .Lend%d\n", label);
+                codegen(node->then);  // thenの計算結果
+                printf(".Lend%d:\n", label);
+            }
+            return;
+        }
+        case ND_WHILE: {
+            int label = jump_label++;
+
+            printf(".Lbegin%d:\n", label);
             codegen(node->condition);
             printf("    pop rax\n");
             printf("    cmp rax, 0\n");
             printf("    je .Lend%d\n", label);
             codegen(node->then);  // thenの計算結果
+            printf("    jmp .Lbegin%d\n", label);
             printf(".Lend%d:\n", label);
+
+            return;
         }
-        return;
-    } else if (node->kind == ND_WHILE) {
-        int label = jump_label++;
+        case ND_FOR: {
+            int label = jump_label++;
 
-        printf(".Lbegin%d:\n", label);
-        codegen(node->condition);
-        printf("    pop rax\n");
-        printf("    cmp rax, 0\n");
-        printf("    je .Lend%d\n", label);
-        codegen(node->then);  // thenの計算結果
-        printf("    jmp .Lbegin%d\n", label);
-        printf(".Lend%d:\n", label);
+            if (node->init != NULL) {
+                codegen(node->init);
+            }
 
-        return;
-    } else if (node->kind == ND_FOR) {
-        int label = jump_label++;
+            printf(".Lbegin%d:\n", label);
+            codegen(node->condition);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je .Lend%d\n", label);
+            codegen(node->then);
+            if (node->inc) {
+                codegen(node->inc);
+            }
+            printf("    jmp .Lbegin%d\n", label);
+            printf(".Lend%d:\n", label);
 
-        if (node->init != NULL) {
-            codegen(node->init);
+            return;
         }
-
-        printf(".Lbegin%d:\n", label);
-        codegen(node->condition);
-        printf("    pop rax\n");
-        printf("    cmp rax, 0\n");
-        printf("    je .Lend%d\n", label);
-        codegen(node->then);
-        if (node->inc) {
-            codegen(node->inc);
-        }
-        printf("    jmp .Lbegin%d\n", label);
-        printf(".Lend%d:\n", label);
-
-        return;
-    }
-
-    //以下ローカル変数つき電卓の部分
-    switch (node->kind) {
         case ND_NUM:
             printf("    push %d\n", node->val);
             return;
@@ -137,8 +138,18 @@ void codegen(Node *node) {
             printf("    mov [rax], rdi\n");
             printf("    push rdi\n");
             return;
+        case ND_ADDR:
+            gen_lval(node->lhs);
+            return;
+        case ND_DEREF:
+            codegen(node->lhs);
+            printf("    pop rax\n");
+            printf("    mov rax, [rax]\n");
+            printf("    push rax\n");
+            return;
     }
 
+    //以下二項演算子をまとめたもの
     codegen(node->lhs);
     codegen(node->rhs);
 

@@ -61,6 +61,8 @@ typedef enum {
     ND_FOR,       // for
     ND_BLOCK,     // {statement statement ...}
     ND_FUNCCALL,  // 関数呼び出し
+    ND_ADDR,      //ポインタの&
+    ND_DEREF,     //ポインタの*
 
 } NodeKind;
 
